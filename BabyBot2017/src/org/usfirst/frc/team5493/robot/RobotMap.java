@@ -27,6 +27,8 @@ public class RobotMap {
 	public final static int JOY_DRIVEBTN_X = 1;
 	public final static int JOY_DRIVEBTN_Y = 4;
 	
+	public final static int JOYBTN_LOGICAL_BACK = 9;
+	public final static int JOYBTN_LOGICAL_START = 10;
 	
 	
 	//Talon #'s from the web dashboard

@@ -2,10 +2,12 @@ package org.usfirst.frc.team5493.robot;
 
 import org.usfirst.frc.team5493.robot.commands.CaptureRope;
 import org.usfirst.frc.team5493.robot.commands.ClimbRope;
-import org.usfirst.frc.team5493.robot.commands.ReleaseGear;
-import org.usfirst.frc.team5493.robot.commands.UnCaptureRope;
 import org.usfirst.frc.team5493.robot.commands.CloseGear;
+import org.usfirst.frc.team5493.robot.commands.DeSensitizeStickCommand;
 import org.usfirst.frc.team5493.robot.commands.PrintDistance;
+import org.usfirst.frc.team5493.robot.commands.ReleaseGear;
+import org.usfirst.frc.team5493.robot.commands.SensitizeStickCommand;
+import org.usfirst.frc.team5493.robot.commands.UnCaptureRope;
 import org.usfirst.frc.team5493.robot.commands.UnClimb;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -40,6 +42,8 @@ public class OI {
     	JoystickButton unCaptureRope = new JoystickButton(joy2, RobotMap.JOY2BTN_X);
     	JoystickButton releaseGear = new JoystickButton(joy2, RobotMap.JOYBTN_RB);
     	JoystickButton closeGear = new JoystickButton(joy2, RobotMap.JOYBTN_LB);
+    	JoystickButton startSensitive = new JoystickButton(driveJoystick, RobotMap.JOYBTN_LOGICAL_START);
+    	JoystickButton endSensitive = new JoystickButton(driveJoystick, RobotMap.JOYBTN_LOGICAL_BACK);
     	
     	JoystickButton printDist = new JoystickButton(driveJoystick, RobotMap.JOY_DRIVEBTN_A);
     	
@@ -55,6 +59,9 @@ public class OI {
     	releaseGear.whenPressed(new ReleaseGear());
     	closeGear.whenPressed(new CloseGear());
     	printDist.whenPressed(new PrintDistance());
+    	
+    	startSensitive.whenPressed(new SensitizeStickCommand());
+    	endSensitive.whenPressed(new DeSensitizeStickCommand());
        
     // Start the command when the button is pressed and let it run the command
     // until it is finished as determined by it's isFinished method.

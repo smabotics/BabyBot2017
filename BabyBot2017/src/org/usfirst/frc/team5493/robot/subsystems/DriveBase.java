@@ -1,18 +1,15 @@
 package org.usfirst.frc.team5493.robot.subsystems;
 
-import org.usfirst.frc.team5493.robot.Robot;
 import org.usfirst.frc.team5493.robot.RobotMap;
 import org.usfirst.frc.team5493.robot.commands.JoystickDrive;
 
 import com.ctre.CANTalon;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SpeedController;
-import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class DriveBase extends Subsystem {
@@ -21,6 +18,12 @@ public class DriveBase extends Subsystem {
 	public SpeedController rightBackMotor;
 	public SpeedController leftFrontMotor;
 	public SpeedController rightFrontMotor;
+
+	private final double sensitivity = -0.89;
+
+	private boolean isSensitive = false;
+	private final boolean isCANTalon = false;
+
 	private RobotDrive drive;
 
 	public DriveBase() {
@@ -30,14 +33,15 @@ public class DriveBase extends Subsystem {
 		rightFrontMotor = RobotMap.SpeedController(RobotMap.rightFront, RobotMap.USE_PWM_VICTOR);
 		leftBackMotor = RobotMap.SpeedController(RobotMap.leftBack, RobotMap.USE_PWM_VICTOR);
 		rightBackMotor = RobotMap.SpeedController(RobotMap.rightBack, RobotMap.USE_PWM_VICTOR);
-		//rightFrontMotor.setInverted(true);
-		//rightBackMotor.setInverted(true);
+		// rightFrontMotor.setInverted(true);
+		// rightBackMotor.setInverted(true);
 		leftFrontMotor.setInverted(true);
 		leftBackMotor.setInverted(true);
 
 		drive = new RobotDrive(leftFrontMotor, leftBackMotor, rightFrontMotor, rightBackMotor);
 		drive.setExpiration(0.1);
-		//LiveWindow.addActuator(DRIVE_SYSTEM, LEFT_FRONT, (LiveWindowSendable) leftFrontMotor);
+		// LiveWindow.addActuator(DRIVE_SYSTEM, LEFT_FRONT, (LiveWindowSendable)
+		// leftFrontMotor);
 	}
 
 	public void initDefaultCommand() {
@@ -45,8 +49,9 @@ public class DriveBase extends Subsystem {
 	}
 
 	public void drive(Joystick j) {
-		//drive(j.getX(), j.getY(), j.getTwist(), 0);
-		drive(j.getX(), j.getZ() * -1, j.getY() * -1, 0);
+		// drive(j.getX(), j.getY(), j.getTwist(), 0);
+		// WORKING drive(j.getX(), j.getZ() * -1, j.getY() * -1, 0);
+		sensitiveDrive(j.getX(), j.getZ() * -1, j.getY() * -1, 0);
 	}
 
 	public void drive(double x, double y, double twist, double gyro) {
@@ -67,4 +72,85 @@ public class DriveBase extends Subsystem {
 	public void stop() {
 		drive(0.0, 0.0, 0.0, 0.0);
 	}
+
+	public boolean toggleSensitivity(boolean turnOnSensitivity) {
+
+		if (turnOnSensitivity) {
+			if (!this.isSensitive) {
+				if (this.isCANTalon)
+					if (this.leftBackMotor instanceof CANTalon) {
+						((CANTalon) this.leftBackMotor).setVoltageRampRate(0.6);
+					}
+				if (this.rightBackMotor instanceof CANTalon) {
+					((CANTalon) this.rightBackMotor).setVoltageRampRate(0.6);
+				}
+				if (this.rightFrontMotor instanceof CANTalon) {
+					((CANTalon) this.rightFrontMotor).setVoltageRampRate(0.6);
+				}
+				if (this.leftFrontMotor instanceof CANTalon) {
+					((CANTalon) this.leftFrontMotor).setVoltageRampRate(0.6);
+				}
+				this.isSensitive = true;
+				DriverStation.reportError("Setting Adjustment OI " + this.isSensitive, false);
+				return true;
+			}
+
+			return false;
+		} else
+
+		{
+			if (this.isSensitive) {
+				if (this.isCANTalon) {
+					if (this.leftBackMotor instanceof CANTalon) {
+						((CANTalon) this.leftBackMotor).setVoltageRampRate(0);
+					}
+					if (this.rightBackMotor instanceof CANTalon) {
+						((CANTalon) this.rightBackMotor).setVoltageRampRate(0);
+					}
+					if (this.rightFrontMotor instanceof CANTalon) {
+						((CANTalon) this.rightFrontMotor).setVoltageRampRate(0);
+					}
+					if (this.leftFrontMotor instanceof CANTalon) {
+						((CANTalon) this.leftFrontMotor).setVoltageRampRate(0);
+					}
+
+				}
+
+				this.isSensitive = false;
+				DriverStation.reportError("Setting Adjustment OI " + this.isSensitive, false);
+				return true;
+			}
+
+			return false;
+		}
+
+	}
+
+	private boolean sensitiveDrive(double x, double y, double twist, double gyro) {
+
+		if (isCANTalon || !this.isSensitive) {
+			drive(x, y, twist, gyro);
+			return true;
+		} else if (!isCANTalon && this.isSensitive) {
+			DriverStation.reportError("Adjusting OI " + this.isSensitive, false);
+
+
+
+			double adjustedX = x;
+			double adjustedY = y;
+			double adjustedTwist = twist;
+
+			// x' = ax^3 + (1-a)x
+			adjustedX = sensitivity * Math.pow(x, 3) + (1 - sensitivity) * x;
+			adjustedY = sensitivity * Math.pow(y, 3) + (1 - sensitivity) * y;
+			adjustedTwist = sensitivity * Math.pow(twist, 3) + (1 - sensitivity) * twist;
+
+			drive(adjustedX, adjustedY, adjustedTwist, gyro);
+
+			return true;
+		}
+
+		return false;
+	}
+
 }
